@@ -345,11 +345,39 @@ namespace MultiThreadingAndAsynchronousProcessing
         }
 
         public void ParallelForEach() {
-            var numbers = Enumerable.Range(0, 10);
-            Parallel.ForEach(numbers, i => {
-                Thread.Sleep(1000);
-                Console.WriteLine(i);
+            var startTime = DateTime.Now;
+            var end1 = new TimeSpan();
+            var end2 = new TimeSpan();
+
+            var numbers1 = Enumerable.Range(0, 100000);
+            var numbers2 = Enumerable.Range(0, 100000);
+
+            Task[] tasks = new Task[2];
+            tasks[0] = Task.Run(() =>
+            {
+                foreach (var n in numbers2)
+                {
+                    Console.WriteLine($"1] {n}");
+                }
+                end1 = DateTime.Now - startTime;
             });
+            tasks[1] = Task.Run(() =>
+            {
+                Parallel.ForEach(numbers1, i =>
+                {
+                    Console.WriteLine($"2] {i}");
+                });
+                end2 = DateTime.Now - startTime;
+            });
+
+            var t = Task.WhenAll(tasks).ContinueWith(pt => {
+                Console.WriteLine("All Tasks completed");
+                Console.WriteLine(startTime);
+                Console.WriteLine($"Traditional: {end1.TotalSeconds} Seconds");
+                Console.WriteLine($"Parallel.ForEach: {end2.TotalSeconds} Seconds");
+            });
+
+            t.Wait();
         }
 
         public void ParallelBreak() {
